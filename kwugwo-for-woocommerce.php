@@ -5,7 +5,7 @@
  * Description: Accept payments across Africa's PSPs with Kwugwo. Uses the Kwugwo embedded checkout overlay; supports sandbox and live keys with a one-click environment toggle.
  * Version:     1.0.0
  * Author:      Kwugwo
- * Author URI:  https://kwugwo.africa
+ * Author URI:  https://github.com/Kwugwo/kwugwo-for-woocommerce
  * License:     GPL-2.0-or-later
  * Text Domain: kwugwo-for-woocommerce
  * Requires PHP: 7.4
