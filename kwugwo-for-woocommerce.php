@@ -22,6 +22,7 @@ define( 'KWUGWO_WC_VERSION', '1.0.0' );
 define( 'KWUGWO_WC_FILE', __FILE__ );
 define( 'KWUGWO_WC_PATH', plugin_dir_path( __FILE__ ) );
 define( 'KWUGWO_WC_URL', plugin_dir_url( __FILE__ ) );
+define( 'KWUGWO_WC_INSTANCE_ID_KEY', '_kwugwo_instance_id');
 
 /**
  * The gateway id used everywhere (settings key, order meta prefix, REST slug).
@@ -87,7 +88,7 @@ function kwugwo_wc_gateway() {
  */
 function kwugwo_wc_missing_wc_notice() {
 	echo '<div class="notice notice-error"><p>';
-	echo esc_html__( 'Kwugwo for WooCommerce requires WooCommerce to be installed and active.', 'kwugwo-woocommerce' );
+	echo esc_html__( 'Kwugwo for WooCommerce requires WooCommerce to be installed and active.', 'kwugwo-for-woocommerce' );
 	echo '</p></div>';
 }
 
@@ -134,9 +135,16 @@ add_filter(
 	function ( $links ) {
 		$url   = admin_url( 'admin.php?page=wc-settings&tab=checkout&section=' . KWUGWO_WC_GATEWAY_ID );
 		$links = array_merge(
-			array( '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'kwugwo-woocommerce' ) . '</a>' ),
+			array( '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'kwugwo-for-woocommerce' ) . '</a>' ),
 			$links
 		);
 		return $links;
 	}
 );
+
+function kwugwo_activate() {
+	if (!get_option(KWUGWO_WC_INSTANCE_ID_KEY, null)) {
+		update_option(KWUGWO_WC_INSTANCE_ID_KEY, uniqid());
+	}
+}
+register_activation_hook( __FILE__, 'kwugwo_activate' );

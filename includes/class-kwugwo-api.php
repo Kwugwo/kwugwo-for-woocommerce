@@ -62,7 +62,7 @@ class Kwugwo_API {
 				'description' => isset( $args['description'] ) ? $args['description'] : null,
 				'onye'        => isset( $args['onye'] ) ? $args['onye'] : null,
 				'checkout'    => isset( $args['checkout'] ) ? $args['checkout'] : null,
-				'metadata'    => isset( $args['metadata'] ) ? $args['metadata'] : null,
+				'meta'        => isset( $args['meta'] ) ? $args['meta'] : null,
 			),
 			static function ( $value ) {
 				return null !== $value && '' !== $value;
@@ -118,7 +118,7 @@ class Kwugwo_API {
 	 */
 	private function request( $method, $path, $body = null ) {
 		if ( '' === $this->secret_key ) {
-			return new WP_Error( 'kwugwo_no_key', __( 'No Kwugwo secret key is configured for the active environment.', 'kwugwo-woocommerce' ) );
+			return new WP_Error( 'kwugwo_no_key', __( 'No Kwugwo secret key is configured for the active environment.', 'kwugwo-for-woocommerce' ) );
 		}
 
 		$url = $this->base_url . $path;
@@ -129,7 +129,7 @@ class Kwugwo_API {
 			'headers' => array(
 				'Authorization' => 'Bearer ' . $this->secret_key,
 				'Accept'        => 'application/json',
-				'User-Agent'    => 'kwugwo-woocommerce/' . KWUGWO_WC_VERSION . '; ' . home_url( '/' ),
+				'User-Agent'    => 'kwugwo-for-woocommerce/' . KWUGWO_WC_VERSION . '; ' . home_url( '/' ),
 			),
 		);
 
@@ -173,7 +173,7 @@ class Kwugwo_API {
 				'kwugwo_http_' . $status,
 				$detail ? $detail : sprintf(
 					/* translators: %d: HTTP status code. */
-					__( 'Kwugwo API returned HTTP %d.', 'kwugwo-woocommerce' ),
+					__( 'Kwugwo API returned HTTP %d.', 'kwugwo-for-woocommerce' ),
 					$status
 				),
 				array(
@@ -184,7 +184,7 @@ class Kwugwo_API {
 		}
 
 		if ( null === $data && '' !== $raw ) {
-			return new WP_Error( 'kwugwo_bad_json', __( 'Could not decode the Kwugwo API response.', 'kwugwo-woocommerce' ) );
+			return new WP_Error( 'kwugwo_bad_json', __( 'Could not decode the Kwugwo API response.', 'kwugwo-for-woocommerce' ) );
 		}
 
 		return is_array( $data ) ? $data : array();

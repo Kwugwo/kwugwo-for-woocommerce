@@ -5,7 +5,7 @@
  * Registers Kwugwo as a payment method in the block-based checkout. The
  * payment itself runs through the gateway's server-side process_payment(),
  * whose returned redirect the block checkout follows to the order-pay page
- * where the embedded overlay opens — same flow as the classic checkout.
+ * where the embedded overlay opens - same flow as the classic checkout.
  *
  * @package Kwugwo\WooCommerce
  */
@@ -55,7 +55,7 @@ final class Kwugwo_Blocks_Support extends AbstractPaymentMethodType {
 		);
 
 		if ( function_exists( 'wp_set_script_translations' ) ) {
-			wp_set_script_translations( $handle, 'kwugwo-woocommerce' );
+			wp_set_script_translations( $handle, 'kwugwo-for-woocommerce' );
 		}
 
 		return array( $handle );
@@ -70,7 +70,7 @@ final class Kwugwo_Blocks_Support extends AbstractPaymentMethodType {
 		$gateway = $this->get_gateway();
 
 		return array(
-			'title'       => $gateway ? $gateway->get_option( 'title', __( 'Kwugwo', 'kwugwo-woocommerce' ) ) : __( 'Kwugwo', 'kwugwo-woocommerce' ),
+			'title'       => $gateway ? $gateway->get_option( 'title', __( 'Kwugwo', 'kwugwo-for-woocommerce' ) ) : __( 'Kwugwo', 'kwugwo-for-woocommerce' ),
 			'description' => $gateway ? $gateway->get_option( 'description', '' ) : '',
 			'icon'        => apply_filters( 'kwugwo_wc_icon', KWUGWO_WC_URL . 'assets/images/kwugwo-logo.jpg' ),
 			'supports'    => $this->get_supported_features(),

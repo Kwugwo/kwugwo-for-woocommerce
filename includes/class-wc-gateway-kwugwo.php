@@ -24,11 +24,12 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 	const META_UGWO_UID = '_kwugwo_ugwo_uid';
 	const META_ONYE_UID = '_kwugwo_onye_uid';
 	const META_TEST_MODE = '_kwugwo_test_mode';
+	const INSTANCE_ID_KEY = KWUGWO_WC_INSTANCE_ID_KEY;
 
 	public function __construct() {
 		$this->id                 = KWUGWO_WC_GATEWAY_ID;
-		$this->method_title       = __( 'Kwugwo', 'kwugwo-woocommerce' );
-		$this->method_description = __( 'Accept bank transfer, USSD and more across Africa with the Kwugwo embedded checkout. Switch between sandbox and live with one toggle.', 'kwugwo-woocommerce' );
+		$this->method_title       = __( 'Kwugwo', 'kwugwo-for-woocommerce' );
+		$this->method_description = __( 'Accept bank transfer, USSD and more across Africa with the Kwugwo embedded checkout. Switch between sandbox and live with one toggle.', 'kwugwo-for-woocommerce' );
 		$this->has_fields         = false;
 		$this->icon               = apply_filters( 'kwugwo_wc_icon', KWUGWO_WC_URL . 'assets/images/kwugwo-logo.jpg' );
 		$this->supports           = array( 'products' );
@@ -36,7 +37,7 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 		$this->init_form_fields();
 		$this->init_settings();
 
-		$this->title       = $this->get_option( 'title', __( 'Kwugwo', 'kwugwo-woocommerce' ) );
+		$this->title       = $this->get_option( 'title', __( 'Kwugwo', 'kwugwo-for-woocommerce' ) );
 		$this->description = $this->get_option( 'description' );
 		$this->enabled     = $this->get_option( 'enabled' );
 
@@ -52,113 +53,113 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 	public function init_form_fields() {
 		$this->form_fields = array(
 			'enabled'           => array(
-				'title'   => __( 'Enable/Disable', 'kwugwo-woocommerce' ),
+				'title'   => __( 'Enable/Disable', 'kwugwo-for-woocommerce' ),
 				'type'    => 'checkbox',
-				'label'   => __( 'Enable Kwugwo', 'kwugwo-woocommerce' ),
+				'label'   => __( 'Enable Kwugwo', 'kwugwo-for-woocommerce' ),
 				'default' => 'no',
 			),
 			'title'             => array(
-				'title'       => __( 'Title', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Title', 'kwugwo-for-woocommerce' ),
 				'type'        => 'text',
-				'description' => __( 'Payment method title the customer sees at checkout.', 'kwugwo-woocommerce' ),
-				'default'     => __( 'Kwugwo', 'kwugwo-woocommerce' ),
+				'description' => __( 'Payment method title the customer sees at checkout.', 'kwugwo-for-woocommerce' ),
+				'default'     => __( 'Kwugwo', 'kwugwo-for-woocommerce' ),
 				'desc_tip'    => true,
 			),
 			'description'       => array(
-				'title'       => __( 'Description', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Description', 'kwugwo-for-woocommerce' ),
 				'type'        => 'textarea',
-				'description' => __( 'Payment method description the customer sees at checkout.', 'kwugwo-woocommerce' ),
-				'default'     => __( 'Pay securely with bank transfer, USSD and more. A secure Kwugwo checkout window will open to complete your payment.', 'kwugwo-woocommerce' ),
+				'description' => __( 'Payment method description the customer sees at checkout.', 'kwugwo-for-woocommerce' ),
+				'default'     => __( 'Pay securely with bank transfer, USSD and more. A secure Kwugwo checkout window will open to complete your payment.', 'kwugwo-for-woocommerce' ),
 			),
 
 			'environment'       => array(
-				'title'       => __( 'Environment', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Environment', 'kwugwo-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => __( 'Kwugwo runs two fully isolated environments. Use sandbox while you build, then untick it to go live. Each environment has its own keys.', 'kwugwo-woocommerce' ),
+				'description' => __( 'Kwugwo runs two fully isolated environments. Use sandbox while you build, then untick it to go live. Each environment has its own keys.', 'kwugwo-for-woocommerce' ),
 			),
 			'testmode'          => array(
-				'title'       => __( 'Sandbox mode', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Sandbox mode', 'kwugwo-for-woocommerce' ),
 				'type'        => 'checkbox',
-				'label'       => __( 'Enable sandbox (test) mode', 'kwugwo-woocommerce' ),
+				'label'       => __( 'Enable sandbox (test) mode', 'kwugwo-for-woocommerce' ),
 				'default'     => 'yes',
-				'description' => __( 'When enabled, all requests use your sandbox keys and the sandbox API; no real money moves. Untick to take live payments.', 'kwugwo-woocommerce' ),
+				'description' => __( 'When enabled, all requests use your sandbox keys and the sandbox API; no real money moves. Untick to take live payments.', 'kwugwo-for-woocommerce' ),
 			),
 
 			'live_keys'         => array(
-				'title'       => __( 'Live API keys', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Live API keys', 'kwugwo-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => __( 'Issued from the live dashboard. Used when sandbox mode is off.', 'kwugwo-woocommerce' ),
+				'description' => __( 'Issued from the live dashboard. Used when sandbox mode is off.', 'kwugwo-for-woocommerce' ),
 			),
 			'live_public_key'   => array(
-				'title'       => __( 'Live public key', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Live public key', 'kwugwo-for-woocommerce' ),
 				'type'        => 'text',
-				'description' => __( 'Starts with pk. — used by the checkout overlay in the browser.', 'kwugwo-woocommerce' ),
+				'description' => __( 'Starts with pk. - used by the checkout overlay in the browser.', 'kwugwo-for-woocommerce' ),
 				'default'     => '',
 				'placeholder' => 'pk.XXXX.…',
 				'desc_tip'    => true,
 			),
 			'live_secret_key'   => array(
-				'title'       => __( 'Live secret key', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Live secret key', 'kwugwo-for-woocommerce' ),
 				'type'        => 'password',
-				'description' => __( 'Starts with sk. — used by your server. Never shared with the browser.', 'kwugwo-woocommerce' ),
+				'description' => __( 'Starts with sk. - used by your server. Never shared with the browser.', 'kwugwo-for-woocommerce' ),
 				'default'     => '',
 				'placeholder' => 'sk.XXXX.…',
 				'desc_tip'    => true,
 			),
 			'live_webhook_secret' => array(
-				'title'       => __( 'Live webhook secret', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Live webhook secret', 'kwugwo-for-woocommerce' ),
 				'type'        => 'password',
-				'description' => __( 'Signing secret of the live webhook endpoint you registered in the dashboard. Leave blank if you did not set one.', 'kwugwo-woocommerce' ),
+				'description' => __( 'Signing secret of the live webhook endpoint you registered in the dashboard. Leave blank if you did not set one.', 'kwugwo-for-woocommerce' ),
 				'default'     => '',
 				'desc_tip'    => true,
 			),
 
 			'sandbox_keys'      => array(
-				'title'       => __( 'Sandbox API keys', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Sandbox API keys', 'kwugwo-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => __( 'Issued from the sandbox dashboard. Used when sandbox mode is on.', 'kwugwo-woocommerce' ),
+				'description' => __( 'Issued from the sandbox dashboard. Used when sandbox mode is on.', 'kwugwo-for-woocommerce' ),
 			),
 			'test_public_key'   => array(
-				'title'       => __( 'Sandbox public key', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Sandbox public key', 'kwugwo-for-woocommerce' ),
 				'type'        => 'text',
 				'default'     => '',
 				'placeholder' => 'pk.XXXX.…',
 			),
 			'test_secret_key'   => array(
-				'title'       => __( 'Sandbox secret key', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Sandbox secret key', 'kwugwo-for-woocommerce' ),
 				'type'        => 'password',
 				'default'     => '',
 				'placeholder' => 'sk.XXXX.…',
 			),
 			'test_webhook_secret' => array(
-				'title'       => __( 'Sandbox webhook secret', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Sandbox webhook secret', 'kwugwo-for-woocommerce' ),
 				'type'        => 'password',
 				'default'     => '',
-				'description' => __( 'Signing secret of the sandbox webhook endpoint. Leave blank if you did not set one.', 'kwugwo-woocommerce' ),
+				'description' => __( 'Signing secret of the sandbox webhook endpoint. Leave blank if you did not set one.', 'kwugwo-for-woocommerce' ),
 				'desc_tip'    => true,
 			),
 
 			'advanced'          => array(
-				'title'       => __( 'Advanced', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Advanced', 'kwugwo-for-woocommerce' ),
 				'type'        => 'title',
 				'description' => '',
 			),
 			'checkout_uid'      => array(
-				'title'       => __( 'Checkout ID (optional)', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Checkout ID (optional)', 'kwugwo-for-woocommerce' ),
 				'type'        => 'text',
-				'description' => __( 'Pin payments to a specific dashboard checkout (chk.…) to override default routing. Leave blank to use workspace defaults.', 'kwugwo-woocommerce' ),
+				'description' => __( 'Pin payments to a specific dashboard checkout (chk.…) to override default routing. Leave blank to use workspace defaults.', 'kwugwo-for-woocommerce' ),
 				'default'     => '',
 				'placeholder' => 'chk.XXXX.…',
 				'desc_tip'    => true,
 			),
 			'debug'             => array(
-				'title'       => __( 'Debug log', 'kwugwo-woocommerce' ),
+				'title'       => __( 'Debug log', 'kwugwo-for-woocommerce' ),
 				'type'        => 'checkbox',
-				'label'       => __( 'Log API requests and webhook events', 'kwugwo-woocommerce' ),
+				'label'       => __( 'Log API requests and webhook events', 'kwugwo-for-woocommerce' ),
 				'default'     => 'no',
 				'description' => sprintf(
 					/* translators: %s: log location. */
-					__( 'Saved under WooCommerce → Status → Logs (source: %s). Disable on production once verified.', 'kwugwo-woocommerce' ),
+					__( 'Saved under WooCommerce → Status → Logs (source: %s). Disable on production once verified.', 'kwugwo-for-woocommerce' ),
 					'<code>kwugwo</code>'
 				),
 			),
@@ -292,10 +293,10 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 		}
 
 		$fields = array(
-			'test_public_key' => array( true, __( 'Sandbox public key', 'kwugwo-woocommerce' ) ),
-			'test_secret_key' => array( true, __( 'Sandbox secret key', 'kwugwo-woocommerce' ) ),
-			'live_public_key' => array( false, __( 'Live public key', 'kwugwo-woocommerce' ) ),
-			'live_secret_key' => array( false, __( 'Live secret key', 'kwugwo-woocommerce' ) ),
+			'test_public_key' => array( true, __( 'Sandbox public key', 'kwugwo-for-woocommerce' ) ),
+			'test_secret_key' => array( true, __( 'Sandbox secret key', 'kwugwo-for-woocommerce' ) ),
+			'live_public_key' => array( false, __( 'Live public key', 'kwugwo-for-woocommerce' ) ),
+			'live_secret_key' => array( false, __( 'Live secret key', 'kwugwo-for-woocommerce' ) ),
 		);
 
 		foreach ( $fields as $field => $meta ) {
@@ -309,9 +310,9 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 				WC_Admin_Settings::add_error(
 					sprintf(
 						/* translators: 1: field label, 2: expected environment. */
-						__( 'Kwugwo: the value in “%1$s” does not look like a %2$s key. Sandbox keys end in “_t”; live keys do not. Check that you pasted the key into the right field.', 'kwugwo-woocommerce' ),
+						__( 'Kwugwo: the value in “%1$s” does not look like a %2$s key. Sandbox keys end in “_t”; live keys do not. Check that you pasted the key into the right field.', 'kwugwo-for-woocommerce' ),
 						$label,
-						$expect_sandbox ? __( 'sandbox', 'kwugwo-woocommerce' ) : __( 'live', 'kwugwo-woocommerce' )
+						$expect_sandbox ? __( 'sandbox', 'kwugwo-for-woocommerce' ) : __( 'live', 'kwugwo-for-woocommerce' )
 					)
 				);
 			}
@@ -322,20 +323,20 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 	 * Show the webhook URL and any configuration warnings above the settings.
 	 */
 	public function admin_options() {
-		echo '<h2>' . esc_html__( 'Kwugwo', 'kwugwo-woocommerce' ) . '</h2>';
+		echo '<h2>' . esc_html__( 'Kwugwo', 'kwugwo-for-woocommerce' ) . '</h2>';
 		echo '<p>' . esc_html( $this->method_description ) . '</p>';
 
 		echo '<div class="notice notice-info inline"><p>';
-		echo '<strong>' . esc_html__( 'Webhook URL', 'kwugwo-woocommerce' ) . ':</strong><br/>';
+		echo '<strong>' . esc_html__( 'Webhook URL', 'kwugwo-for-woocommerce' ) . ':</strong><br/>';
 		echo '<code>' . esc_html( $this->get_webhook_url() ) . '</code><br/>';
-		echo esc_html__( 'Register this URL as a webhook endpoint in your Kwugwo dashboard (for both sandbox and live), then paste the endpoint signing secret into the matching field below.', 'kwugwo-woocommerce' );
+		echo esc_html__( 'Register this URL as a webhook endpoint in your Kwugwo dashboard (for both sandbox and live), then paste the endpoint signing secret into the matching field below.', 'kwugwo-for-woocommerce' );
 		echo '</p></div>';
 
 		if ( ! in_array( get_woocommerce_currency(), $this->get_supported_currencies(), true ) ) {
 			echo '<div class="notice notice-warning inline"><p>';
 			printf(
 				/* translators: 1: store currency, 2: supported list. */
-				esc_html__( 'Your store currency is %1$s. Kwugwo currently supports %2$s only, so the gateway will be hidden at checkout.', 'kwugwo-woocommerce' ),
+				esc_html__( 'Your store currency is %1$s. Kwugwo currently supports %2$s only, so the gateway will be hidden at checkout.', 'kwugwo-for-woocommerce' ),
 				esc_html( get_woocommerce_currency() ),
 				esc_html( implode( ', ', $this->get_supported_currencies() ) )
 			);
@@ -361,13 +362,13 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 		$order = wc_get_order( $order_id );
 
 		if ( ! $order ) {
-			wc_add_notice( __( 'We could not find your order. Please try again.', 'kwugwo-woocommerce' ), 'error' );
+			wc_add_notice( __( 'We could not find your order. Please try again.', 'kwugwo-for-woocommerce' ), 'error' );
 			return array( 'result' => 'failure' );
 		}
 
 		$currency = $order->get_currency();
 		if ( ! in_array( $currency, $this->get_supported_currencies(), true ) ) {
-			wc_add_notice( __( 'This currency is not supported by Kwugwo.', 'kwugwo-woocommerce' ), 'error' );
+			wc_add_notice( __( 'This currency is not supported by Kwugwo.', 'kwugwo-for-woocommerce' ), 'error' );
 			return array( 'result' => 'failure' );
 		}
 
@@ -377,7 +378,7 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 			wc_add_notice(
 				sprintf(
 					/* translators: %s: formatted minimum amount. */
-					__( 'The minimum amount Kwugwo can charge is %s.', 'kwugwo-woocommerce' ),
+					__( 'The minimum amount Kwugwo can charge is %s.', 'kwugwo-for-woocommerce' ),
 					wc_price( self::NGN_MIN_KOBO / 100, array( 'currency' => 'NGN' ) )
 				),
 				'error'
@@ -395,9 +396,9 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 		$ugwo_args = array(
 			'amount'      => $amount,
 			'currency'    => $currency,
-			'ref'         => $order->get_order_number(),
+			'ref'         => $this->get_kwugwo_ref(strval($order->get_order_number())),
 			'description' => $this->build_description( $order ),
-			'metadata'    => array(
+			'meta'    => array(
 				'order_id'  => (string) $order->get_id(),
 				'order_key' => $order->get_order_key(),
 				'source'    => 'woocommerce',
@@ -408,7 +409,7 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 			$ugwo_args['onye'] = $onye_uid;
 		}
 
-		$checkout_uid = trim( $this->get_option( 'checkout_uid', '' ) );
+		$checkout_uid = trim( $this->get_option( 'checkout_uid', null ) );
 		if ( $checkout_uid ) {
 			$ugwo_args['checkout'] = $checkout_uid;
 		}
@@ -420,7 +421,7 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 		// one, and retry once.
 		if ( is_wp_error( $ugwo ) && $onye_from_cache ) {
 			Kwugwo_Logger::log( 'create_ugwo failed with cached onye; recreating and retrying.', 'warning' );
-			$this->forget_onye_uid( $order );
+			// $this->forget_onye_uid( $order );
 
 			$fresh_onye = $this->create_onye_record( $api, $order );
 			if ( $fresh_onye ) {
@@ -437,13 +438,13 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 		if ( is_wp_error( $ugwo ) ) {
 			Kwugwo_Logger::log( 'create_ugwo failed: ' . $ugwo->get_error_message(), 'error' );
 			wc_add_notice(
-				__( 'We could not start your payment with Kwugwo. Please try again or use another method.', 'kwugwo-woocommerce' ),
+				__( 'We could not start your payment with Kwugwo. Please try again or use another method.', 'kwugwo-for-woocommerce' ),
 				'error'
 			);
 			$order->add_order_note(
 				sprintf(
 					/* translators: %s: error message. */
-					__( 'Kwugwo: failed to create payment request — %s', 'kwugwo-woocommerce' ),
+					__( 'Kwugwo: failed to create payment request - %s', 'kwugwo-for-woocommerce' ),
 					$ugwo->get_error_message()
 				)
 			);
@@ -451,7 +452,7 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 		}
 
 		if ( empty( $ugwo['uid'] ) ) {
-			wc_add_notice( __( 'Kwugwo returned an unexpected response. Please try again.', 'kwugwo-woocommerce' ), 'error' );
+			wc_add_notice( __( 'Kwugwo returned an unexpected response. Please try again.', 'kwugwo-for-woocommerce' ), 'error' );
 			return array( 'result' => 'failure' );
 		}
 
@@ -466,7 +467,7 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 			'pending',
 			sprintf(
 				/* translators: %s: ugwo id. */
-				__( 'Kwugwo payment request created (%s). Awaiting customer payment.', 'kwugwo-woocommerce' ),
+				__( 'Kwugwo payment request created (%s). Awaiting customer payment.', 'kwugwo-for-woocommerce' ),
 				$ugwo['uid']
 			)
 		);
@@ -478,6 +479,11 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 			'result'   => 'success',
 			'redirect' => $order->get_checkout_payment_url( true ),
 		);
+	}
+
+	public function get_kwugwo_ref(string $ref): string
+	{
+		return sprintf('%s-%s', get_option(self::INSTANCE_ID_KEY, ''), $ref );
 	}
 
 	/**
@@ -493,7 +499,7 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 
 		$ugwo_uid = $order->get_meta( self::META_UGWO_UID );
 		if ( ! $ugwo_uid ) {
-			echo '<p>' . esc_html__( 'This order has no Kwugwo payment session. Please return to checkout and try again.', 'kwugwo-woocommerce' ) . '</p>';
+			echo '<p>' . esc_html__( 'This order has no Kwugwo payment session. Please return to checkout and try again.', 'kwugwo-for-woocommerce' ) . '</p>';
 			return;
 		}
 
@@ -502,13 +508,13 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 		?>
 		<div id="kwugwo-checkout" class="kwugwo-checkout">
 			<p class="kwugwo-checkout__intro">
-				<?php esc_html_e( 'Complete your payment in the secure Kwugwo window.', 'kwugwo-woocommerce' ); ?>
+				<?php esc_html_e( 'Complete your payment in the secure Kwugwo window.', 'kwugwo-for-woocommerce' ); ?>
 			</p>
 			<button type="button" id="kwugwo-pay-button" class="button alt">
 				<?php
 				printf(
 					/* translators: %s: formatted order total. */
-					esc_html__( 'Pay %s now', 'kwugwo-woocommerce' ),
+					esc_html__( 'Pay %s now', 'kwugwo-for-woocommerce' ),
 					wp_kses_post( $order->get_formatted_order_total() )
 				);
 				?>
@@ -528,9 +534,9 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 		// Official embed SDK, loaded from the CDN. Exposes window.KwugwoCheckout.
 		wp_enqueue_script(
 			'kwugwo-checkout-sdk',
-			'https://cdn.jsdelivr.net/npm/@kwugwo/checkout',
+			KWUGWO_WC_URL . 'assets/js/kwugwo-checkout.global.min.js',
 			array(),
-			null, // CDN pins the version; let it manage caching.
+			KWUGWO_WC_VERSION,
 			true
 		);
 
@@ -560,11 +566,11 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 				'cancelUrl'    => $order->get_cancel_order_url_raw(),
 				'autoOpen'     => true,
 				'i18n'         => array(
-					'opening'  => __( 'Opening secure checkout…', 'kwugwo-woocommerce' ),
-					'success'  => __( 'Payment received! Redirecting…', 'kwugwo-woocommerce' ),
-					'closed'   => __( 'Checkout closed. Click the button to try again.', 'kwugwo-woocommerce' ),
-					'error'    => __( 'Something went wrong with the payment. Please try again.', 'kwugwo-woocommerce' ),
-					'payAgain' => __( 'Pay now', 'kwugwo-woocommerce' ),
+					'opening'  => __( 'Opening secure checkout…', 'kwugwo-for-woocommerce' ),
+					'success'  => __( 'Payment received! Redirecting…', 'kwugwo-for-woocommerce' ),
+					'closed'   => __( 'Checkout closed. Click the button to try again.', 'kwugwo-for-woocommerce' ),
+					'error'    => __( 'Something went wrong with the payment. Please try again.', 'kwugwo-for-woocommerce' ),
+					'payAgain' => __( 'Pay now', 'kwugwo-for-woocommerce' ),
 				),
 			)
 		);
@@ -579,7 +585,7 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 	private function build_description( $order ) {
 		$description = sprintf(
 			/* translators: 1: order number, 2: site name. */
-			__( 'Order %1$s at %2$s', 'kwugwo-woocommerce' ),
+			__( 'Order %1$s at %2$s', 'kwugwo-for-woocommerce' ),
 			$order->get_order_number(),
 			get_bloginfo( 'name' )
 		);
@@ -692,12 +698,12 @@ class WC_Gateway_Kwugwo extends WC_Payment_Gateway {
 
 		$customer_id = $order->get_customer_id();
 		if ( $customer_id ) {
-			$args['ref'] = 'wp_user_' . $customer_id;
+			$args['ref'] = $this->get_kwugwo_ref('wp_user_' . $customer_id);
 		}
 
 		// Attach a billing address only when the API's required fields are
 		// present (address, city, country). `address2` and `zip` are always
-		// included — as empty strings when the order has none.
+		// included - as empty strings when the order has none.
 		$address1 = (string) $order->get_billing_address_1();
 		$city     = (string) $order->get_billing_city();
 		$country  = (string) $order->get_billing_country();
