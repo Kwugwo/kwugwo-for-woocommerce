@@ -39,7 +39,7 @@ class Kwugwo_Webhook {
 	 */
 	public function handle() {
 		$raw_body  = file_get_contents( 'php://input' );
-		$signature = isset( $_SERVER['HTTP_X_KWUGWO_SIGNATURE'] ) ? wp_unslash( $_SERVER['HTTP_X_KWUGWO_SIGNATURE'] ) : '';
+		$signature = isset( $_SERVER['HTTP_X_KWUGWO_SIGNATURE'] ) && is_string( $_SERVER['HTTP_X_KWUGWO_SIGNATURE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_KWUGWO_SIGNATURE'] ) ) : '';
 
 		if ( '' === $raw_body ) {
 			$this->respond( 400, 'empty body' );
@@ -80,7 +80,7 @@ class Kwugwo_Webhook {
 			$this->respond( 200, 'no ugwo' );
 		}
 
-		$order = $this->find_order( $ugwo_uid, isset( $data['metadata']['order_id'] ) ? $data['metadata']['order_id'] : null );
+		$order = $this->find_order( $ugwo_uid, isset( $data['meta']['order_id'] ) ? $data['meta']['order_id'] : null );
 		if ( ! $order ) {
 			Kwugwo_Logger::log( 'No matching order for ugwo ' . $ugwo_uid . '; acking.', 'warning' );
 			$this->mark_processed( $event_uid );
@@ -182,19 +182,6 @@ class Kwugwo_Webhook {
 			}
 		}
 
-		// Fallback: look the order up by stored ugwo uid.
-		$orders = wc_get_orders(
-			array(
-				'limit'      => 1,
-				'meta_key'   => WC_Gateway_Kwugwo::META_UGWO_UID,
-				'meta_value' => $ugwo_uid,
-			)
-		);
-
-		if ( ! empty( $orders ) ) {
-			return $orders[0];
-		}
-
 		return null;
 	}
 
@@ -223,9 +210,9 @@ class Kwugwo_Webhook {
 					$order->add_order_note(
 						sprintf(
 							/* translators: 1: ugwo id, 2: activity id. */
-							__( 'Kwugwo payment confirmed (ugwo %1$s, activity %2$s).', 'kwugwo-woocommerce' ),
+							__( 'Kwugwo payment confirmed (ugwo %1$s, activity %2$s).', 'kwugwo-for-woocommerce' ),
 							$ugwo_uid,
-							$activity_uid ? $activity_uid : '—'
+							$activity_uid ? $activity_uid : '-'
 						)
 					);
 					// Records the transaction id and moves to processing/completed.
@@ -235,22 +222,22 @@ class Kwugwo_Webhook {
 
 			case 'processing':
 				if ( $order->has_status( 'pending' ) ) {
-					$order->update_status( 'on-hold', __( 'Kwugwo: payment is processing at the PSP.', 'kwugwo-woocommerce' ) );
+					$order->update_status( 'on-hold', __( 'Kwugwo: payment is processing at the PSP.', 'kwugwo-for-woocommerce' ) );
 				}
 				break;
 
 			case 'cancelled':
 				if ( $order->needs_payment() ) {
-					$order->update_status( 'cancelled', __( 'Kwugwo: payment request was cancelled.', 'kwugwo-woocommerce' ) );
+					$order->update_status( 'cancelled', __( 'Kwugwo: payment request was cancelled.', 'kwugwo-for-woocommerce' ) );
 				}
 				break;
 
 			case 'refunded':
-				$order->add_order_note( __( 'Kwugwo: payment was fully refunded. Review and reconcile in WooCommerce if needed.', 'kwugwo-woocommerce' ) );
+				$order->add_order_note( __( 'Kwugwo: payment was fully refunded. Review and reconcile in WooCommerce if needed.', 'kwugwo-for-woocommerce' ) );
 				break;
 
 			case 'partially_refunded':
-				$order->add_order_note( __( 'Kwugwo: payment was partially refunded. Review and reconcile in WooCommerce if needed.', 'kwugwo-woocommerce' ) );
+				$order->add_order_note( __( 'Kwugwo: payment was partially refunded. Review and reconcile in WooCommerce if needed.', 'kwugwo-for-woocommerce' ) );
 				break;
 
 			default:
