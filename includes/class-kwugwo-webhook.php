@@ -1,368 +1,195 @@
 <?php
 /**
- * Kwugwo webhook listener.
+ * Kwugwo webhook listener at {site}/?wc-api=kwugwo_webhook.
  *
- * Endpoint: {site}/?wc-api=kwugwo_webhook
- *
- * Verifies the HMAC signature against the raw body, de-duplicates on the
- * stable event uid, then re-fetches the ugwo from the merchant API (the
- * source of truth, per the docs) before updating the WooCommerce order.
+ * Verifies the signature, ignores repeated deliveries, finds the order and
+ * then asks the Kwugwo API for the current state of the payment. The event
+ * body is never trusted to mark an order paid.
  *
  * @package Kwugwo\WooCommerce
  */
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Webhook handler.
+ */
 class Kwugwo_Webhook {
 
 	/**
-	 * @var Kwugwo_Webhook|null
+	 * Register the endpoint.
 	 */
-	private static $instance = null;
-
-	/**
-	 * @return Kwugwo_Webhook
-	 */
-	public static function instance() {
-		if ( null === self::$instance ) {
-			self::$instance = new self();
-		}
-		return self::$instance;
-	}
-
-	private function __construct() {
-		add_action( 'woocommerce_api_kwugwo_webhook', array( $this, 'handle' ) );
+	public static function init() {
+		add_action( 'woocommerce_api_kwugwo_webhook', array( __CLASS__, 'handle' ) );
 	}
 
 	/**
-	 * Handle an incoming webhook delivery and always answer with a status code.
+	 * Handle a delivery and always answer with a status code. Kwugwo retries
+	 * anything other than 2xx twice, 30 minutes apart.
 	 */
-	public function handle() {
+	public static function handle() {
 		$raw_body  = file_get_contents( 'php://input' );
-		$signature = isset( $_SERVER['HTTP_X_KWUGWO_SIGNATURE'] ) && is_string( $_SERVER['HTTP_X_KWUGWO_SIGNATURE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_KWUGWO_SIGNATURE'] ) ) : '';
+		$signature = isset( $_SERVER['HTTP_X_KWUGWO_SIGNATURE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_KWUGWO_SIGNATURE'] ) ) : '';
+		$payload   = json_decode( (string) $raw_body, true );
+		$gateway   = kwugwo_wc_gateway();
 
-		if ( '' === $raw_body ) {
-			$this->respond( 400, 'empty body' );
+		if ( ! $gateway || ! is_array( $payload ) || empty( $payload['event'] ) || empty( $payload['uid'] ) ) {
+			self::respond( 400, 'malformed payload' );
 		}
 
-		if ( ! $this->verify( $raw_body, $signature ) ) {
-			Kwugwo_Logger::log( 'Webhook signature verification failed.', 'error' );
-			$this->respond( 401, 'invalid signature' );
-		}
-
-		$payload = json_decode( $raw_body, true );
-		if ( ! is_array( $payload ) || empty( $payload['event'] ) ) {
-			$this->respond( 400, 'malformed payload' );
-		}
-
-		$event_uid = isset( $payload['uid'] ) ? $payload['uid'] : '';
-		$event     = $payload['event'];
+		$event_uid = (string) $payload['uid'];
+		$event     = (string) $payload['event'];
 		$data      = isset( $payload['data'] ) && is_array( $payload['data'] ) ? $payload['data'] : array();
 
-		Kwugwo_Logger::log( sprintf( 'Webhook received: %s (%s)', $event, $event_uid ) );
+		// Sandbox ids end in "_t"; each environment has its own signing secret.
+		$mode   = '_t' === substr( $event_uid, -2 ) ? 'sandbox' : 'live';
+		$secret = $gateway->get_env_option( 'webhook_secret', $mode );
 
-		// Idempotency: the event uid is stable across redelivery attempts.
-		if ( $event_uid && $this->already_processed( $event_uid ) ) {
-			Kwugwo_Logger::log( 'Webhook already processed, acking: ' . $event_uid );
-			$this->respond( 200, 'duplicate' );
+		if ( '' !== $secret && ! Kwugwo_API::verify_signature( $raw_body, $signature, $secret ) ) {
+			Kwugwo_Logger::log( 'Webhook signature check failed for ' . $event_uid, 'error' );
+			self::respond( 401, 'invalid signature' );
 		}
 
-		// We only act on ugwo lifecycle events; everything else is acked and skipped.
-		if ( 0 !== strpos( $event, 'ugwo.' ) ) {
-			$this->mark_processed( $event_uid );
-			$this->respond( 200, 'ignored' );
+		$received          = (array) get_option( 'kwugwo_wc_last_webhook', array() );
+		$received[ $mode ] = time();
+		update_option( 'kwugwo_wc_last_webhook', $received, false );
+
+		Kwugwo_Logger::log( sprintf( 'Webhook %s (%s)', $event, $event_uid ) );
+
+		$processed_key = 'kwugwo_wc_evt_' . md5( $event_uid );
+		if ( get_transient( $processed_key ) ) {
+			self::respond( 200, 'duplicate' );
 		}
 
-		$ugwo_uid = $this->extract_ugwo_uid( $event, $data );
-		if ( ! $ugwo_uid ) {
-			Kwugwo_Logger::log( 'Webhook had no resolvable ugwo uid; acking.', 'warning' );
-			$this->mark_processed( $event_uid );
-			$this->respond( 200, 'no ugwo' );
-		}
+		$ugwo_uid = self::ugwo_uid( $event, $data );
+		$order    = $ugwo_uid ? self::find_order( $ugwo_uid, $data ) : null;
 
-		$order = $this->find_order( $ugwo_uid, isset( $data['meta']['order_id'] ) ? $data['meta']['order_id'] : null );
-		if ( ! $order ) {
-			Kwugwo_Logger::log( 'No matching order for ugwo ' . $ugwo_uid . '; acking.', 'warning' );
-			$this->mark_processed( $event_uid );
-			$this->respond( 200, 'no order' );
-		}
-
-		// Re-fetch the ugwo for the authoritative status.
-		$test_mode = $this->is_sandbox_id( $ugwo_uid );
-		$secret    = $this->secret_for_env( $test_mode );
-		$ugwo      = ( new Kwugwo_API( $secret, $test_mode ) )->get_ugwo( $ugwo_uid );
-
-		if ( is_wp_error( $ugwo ) ) {
-			Kwugwo_Logger::log( 'Re-fetch of ugwo failed: ' . $ugwo->get_error_message(), 'error' );
-			// 500 so Kwugwo retries the delivery later.
-			$this->respond( 500, 'refetch failed' );
-		}
-
-		$this->apply_status( $order, $ugwo, $event );
-		$this->mark_processed( $event_uid );
-
-		$this->respond( 200, 'ok' );
-	}
-
-	/* ---------------------------------------------------------------------
-	 * Signature
-	 * ------------------------------------------------------------------- */
-
-	/**
-	 * Verify the signature against every configured secret. If no secret is
-	 * configured at all, the endpoint was registered without one and the
-	 * signature is not enforced (matching Kwugwo's documented behaviour).
-	 *
-	 * @param string $raw_body  Raw bytes.
-	 * @param string $signature Header value.
-	 * @return bool
-	 */
-	private function verify( $raw_body, $signature ) {
-		$settings = $this->settings();
-		$secrets  = array_filter(
-			array(
-				isset( $settings['live_webhook_secret'] ) ? $settings['live_webhook_secret'] : '',
-				isset( $settings['test_webhook_secret'] ) ? $settings['test_webhook_secret'] : '',
-			),
-			static function ( $s ) {
-				return '' !== (string) $s;
-			}
-		);
-
-		if ( empty( $secrets ) ) {
-			return true; // No secret set anywhere; accept (no enforcement).
-		}
-
-		foreach ( $secrets as $secret ) {
-			if ( Kwugwo_API::verify_signature( $raw_body, $signature, $secret ) ) {
-				return true;
+		if ( $order ) {
+			if ( 0 === strpos( $event, 'refund.' ) ) {
+				self::note_refund( $order, $event, $data );
+			} elseif ( 'ugwo.activity.double_charge_detected' === $event ) {
+				self::note_double_charge( $order, $data );
+			} elseif ( is_wp_error( Kwugwo_Payment_Sync::sync( $order ) ) ) {
+				self::respond( 500, 'could not fetch payment' );
 			}
 		}
 
-		return false;
+		set_transient( $processed_key, 1, WEEK_IN_SECONDS );
+		self::respond( 200, $order ? 'ok' : 'ignored' );
 	}
 
-	/* ---------------------------------------------------------------------
-	 * Order resolution + status mapping
-	 * ------------------------------------------------------------------- */
-
 	/**
-	 * Pull the ugwo uid out of the event payload.
+	 * The ugwo an event is about, or '' for events we do not act on.
 	 *
 	 * @param string $event Event type.
-	 * @param array  $data  Resource snapshot.
+	 * @param array  $data  Event data.
 	 * @return string
 	 */
-	private function extract_ugwo_uid( $event, array $data ) {
-		// ugwo.created / ugwo.updated → data is an ugwo.
-		if ( 0 === strpos( $event, 'ugwo.activity' ) ) {
-			// Activity snapshot; the parent ugwo uid may be present under `ugwo`.
-			if ( ! empty( $data['ugwo'] ) ) {
-				return is_array( $data['ugwo'] ) && ! empty( $data['ugwo']['uid'] ) ? $data['ugwo']['uid'] : ( is_string( $data['ugwo'] ) ? $data['ugwo'] : '' );
-			}
+	private static function ugwo_uid( $event, array $data ) {
+		if ( 0 === strpos( $event, 'ugwo.activity.next_action.' ) ) {
 			return '';
 		}
-
-		return ! empty( $data['uid'] ) ? $data['uid'] : '';
-	}
-
-	/**
-	 * Find the WooCommerce order linked to this ugwo.
-	 *
-	 * @param string      $ugwo_uid       ugw.…
-	 * @param string|null $hint_order_id  order_id from the event metadata, if any.
-	 * @return WC_Order|null
-	 */
-	private function find_order( $ugwo_uid, $hint_order_id ) {
-		// Fast path: we stamped the order id into the ugwo metadata ourselves.
-		if ( $hint_order_id ) {
-			$order = wc_get_order( (int) $hint_order_id );
-			if ( $order && $order->get_meta( WC_Gateway_Kwugwo::META_UGWO_UID ) === $ugwo_uid ) {
-				return $order;
-			}
+		if ( 0 === strpos( $event, 'ugwo.activity.' ) ) {
+			return isset( $data['ugwo_uid'] ) ? (string) $data['ugwo_uid'] : '';
 		}
-
-		return null;
-	}
-
-	/**
-	 * Transition the order to match the ugwo status.
-	 *
-	 * @param WC_Order $order Order.
-	 * @param array    $ugwo  Authoritative ugwo from the API.
-	 * @param string   $event Triggering event type (for the note).
-	 */
-	private function apply_status( $order, array $ugwo, $event ) {
-		// The API returns enum fields as a [value, translation_key] pair, e.g.
-		// "status": ["ugwo_successful", "enum.ugwo_status.ugwo_successful"].
-		$status   = $this->enum_value( isset( $ugwo['status'] ) ? $ugwo['status'] : '' );
-		$ugwo_uid = isset( $ugwo['uid'] ) ? $ugwo['uid'] : '';
-
-		Kwugwo_Logger::log( sprintf( 'Order #%d: ugwo %s status=%s (via %s)', $order->get_id(), $ugwo_uid, $status, $event ) );
-
-		switch ( $status ) {
-			case 'ugwo_successful':
-				// Complete unless the order is already in a paid state (avoids
-				// re-firing completion on a redelivery). Pending *and* on-hold
-				// orders both proceed here.
-				if ( ! $order->has_status( wc_get_is_paid_statuses() ) ) {
-					$activity_uid = $this->latest_successful_activity( $ugwo );
-					$order->add_order_note(
-						sprintf(
-							/* translators: 1: ugwo id, 2: activity id. */
-							__( 'Kwugwo payment confirmed (ugwo %1$s, activity %2$s).', 'kwugwo-for-woocommerce' ),
-							$ugwo_uid,
-							$activity_uid ? $activity_uid : '-'
-						)
-					);
-					// Records the transaction id and moves to processing/completed.
-					$order->payment_complete( $ugwo_uid );
-				}
-				break;
-
-			case 'processing':
-				if ( $order->has_status( 'pending' ) ) {
-					$order->update_status( 'on-hold', __( 'Kwugwo: payment is processing at the PSP.', 'kwugwo-for-woocommerce' ) );
-				}
-				break;
-
-			case 'cancelled':
-				if ( $order->needs_payment() ) {
-					$order->update_status( 'cancelled', __( 'Kwugwo: payment request was cancelled.', 'kwugwo-for-woocommerce' ) );
-				}
-				break;
-
-			case 'refunded':
-				$order->add_order_note( __( 'Kwugwo: payment was fully refunded. Review and reconcile in WooCommerce if needed.', 'kwugwo-for-woocommerce' ) );
-				break;
-
-			case 'partially_refunded':
-				$order->add_order_note( __( 'Kwugwo: payment was partially refunded. Review and reconcile in WooCommerce if needed.', 'kwugwo-for-woocommerce' ) );
-				break;
-
-			default:
-				// requires_ugwo or anything new: nothing to do.
-				break;
+		if ( 0 === strpos( $event, 'ugwo.' ) ) {
+			return isset( $data['uid'] ) ? (string) $data['uid'] : '';
 		}
-
-		$order->save();
-	}
-
-	/**
-	 * Find the uid of a successful charge activity, if the snapshot carries one.
-	 * Used only for the order note; never relied on for the decision to complete.
-	 *
-	 * @param array $ugwo Ugwo.
-	 * @return string
-	 */
-	private function latest_successful_activity( array $ugwo ) {
-		// Newer responses expose the latest activity as a single object.
-		// (Note the upstream field spelling, "lastest_ugwo_activity".)
-		foreach ( array( 'lastest_ugwo_activity', 'latest_ugwo_activity' ) as $key ) {
-			if ( ! empty( $ugwo[ $key ] ) && is_array( $ugwo[ $key ] ) ) {
-				$activity = $ugwo[ $key ];
-				if ( 'successful' === $this->enum_value( isset( $activity['status'] ) ? $activity['status'] : '' ) && ! empty( $activity['uid'] ) ) {
-					return $activity['uid'];
-				}
-			}
+		if ( 0 === strpos( $event, 'refund.' ) ) {
+			return isset( $data['ugwo']['uid'] ) ? (string) $data['ugwo']['uid'] : '';
 		}
-
-		// Older shape: an array of activities.
-		if ( ! empty( $ugwo['activities'] ) && is_array( $ugwo['activities'] ) ) {
-			foreach ( array_reverse( $ugwo['activities'] ) as $activity ) {
-				if ( 'successful' === $this->enum_value( isset( $activity['status'] ) ? $activity['status'] : '' ) && ! empty( $activity['uid'] ) ) {
-					return $activity['uid'];
-				}
-			}
-		}
-
 		return '';
 	}
 
 	/**
-	 * Normalise an enum field. The API returns enums as a two-element pair,
-	 * [machine_value, translation_key]; older/simple fields are plain strings.
+	 * Find the Kwugwo order that owns an ugwo.
 	 *
-	 * @param mixed $value Raw field value.
-	 * @return string The machine value.
+	 * @param string $ugwo_uid Ugwo id.
+	 * @param array  $data     Event data, which may carry our order id in meta.
+	 * @return WC_Order|null
 	 */
-	private function enum_value( $value ) {
-		if ( is_array( $value ) ) {
-			return isset( $value[0] ) ? (string) $value[0] : '';
+	private static function find_order( $ugwo_uid, array $data ) {
+		if ( ! empty( $data['meta']['order_id'] ) ) {
+			$order = wc_get_order( absint( $data['meta']['order_id'] ) );
+			if ( $order && $order->get_meta( Kwugwo_Gateway::META_UGWO_UID ) === $ugwo_uid ) {
+				return $order;
+			}
 		}
-		return (string) $value;
-	}
 
-	/* ---------------------------------------------------------------------
-	 * Idempotency
-	 * ------------------------------------------------------------------- */
+		$orders = wc_get_orders(
+			array(
+				'limit'          => 1,
+				'payment_method' => KWUGWO_WC_GATEWAY_ID,
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Only runs for webhooks that do not carry the order id.
+					array(
+						'key'   => Kwugwo_Gateway::META_UGWO_UID,
+						'value' => $ugwo_uid,
+					),
+				),
+			)
+		);
 
-	/**
-	 * @param string $event_uid evt.…
-	 * @return bool
-	 */
-	private function already_processed( $event_uid ) {
-		return (bool) get_transient( $this->event_key( $event_uid ) );
-	}
-
-	/**
-	 * @param string $event_uid evt.…
-	 */
-	private function mark_processed( $event_uid ) {
-		if ( $event_uid ) {
-			set_transient( $this->event_key( $event_uid ), 1, WEEK_IN_SECONDS );
-		}
+		return $orders ? $orders[0] : null;
 	}
 
 	/**
-	 * @param string $event_uid evt.…
-	 * @return string
-	 */
-	private function event_key( $event_uid ) {
-		return 'kwugwo_evt_' . md5( $event_uid );
-	}
-
-	/* ---------------------------------------------------------------------
-	 * Helpers
-	 * ------------------------------------------------------------------- */
-
-	/**
-	 * @return array Gateway settings option.
-	 */
-	private function settings() {
-		return get_option( 'woocommerce_' . KWUGWO_WC_GATEWAY_ID . '_settings', array() );
-	}
-
-	/**
-	 * Sandbox ids end in `_t` (see docs: IDs & prefixes).
+	 * Record the outcome of a refund on the order.
 	 *
-	 * @param string $id Any Kwugwo id.
-	 * @return bool
+	 * @param WC_Order $order Order.
+	 * @param string   $event Event type.
+	 * @param array    $data  Refund object.
 	 */
-	private function is_sandbox_id( $id ) {
-		return is_string( $id ) && '_t' === substr( $id, -2 );
+	private static function note_refund( $order, $event, array $data ) {
+		$refund_uid = isset( $data['uid'] ) ? (string) $data['uid'] : '-';
+		$amount     = isset( $data['amount'] ) ? wp_strip_all_tags( wc_price( (int) $data['amount'] / 100, array( 'currency' => $order->get_currency() ) ) ) : '';
+
+		if ( 'refund.successful' === $event ) {
+			Kwugwo_Payment_Sync::note_once(
+				$order,
+				'refund_ok_' . $refund_uid,
+				/* translators: 1: amount, 2: Kwugwo refund id. */
+				sprintf( __( 'Kwugwo refund of %1$s completed (%2$s). The money is on its way back to the customer.', 'kwugwo-for-woocommerce' ), $amount, $refund_uid )
+			);
+		} elseif ( 'refund.failed' === $event ) {
+			$reason = isset( $data['error']['message'] ) ? (string) $data['error']['message'] : '';
+			Kwugwo_Payment_Sync::note_once(
+				$order,
+				'refund_failed_' . $refund_uid,
+				/* translators: 1: amount, 2: Kwugwo refund id, 3: reason. */
+				sprintf( __( 'Kwugwo refund of %1$s FAILED (%2$s): %3$s The customer has not been paid back, although WooCommerce lists the refund. Fix the cause and refund again, or pay the customer directly.', 'kwugwo-for-woocommerce' ), $amount, $refund_uid, $reason )
+			);
+		}
 	}
 
 	/**
-	 * @param bool $test_mode Whether to return the sandbox secret.
-	 * @return string
+	 * Warn the store owner that the customer paid twice.
+	 *
+	 * @param WC_Order $order Order.
+	 * @param array    $data  Activity object.
 	 */
-	private function secret_for_env( $test_mode ) {
-		$settings = $this->settings();
-		$key      = $test_mode ? 'test_secret_key' : 'live_secret_key';
-		return isset( $settings[ $key ] ) ? trim( $settings[ $key ] ) : '';
+	private static function note_double_charge( $order, array $data ) {
+		$activity_uid = isset( $data['uid'] ) ? (string) $data['uid'] : '-';
+		$amount       = isset( $data['charged_amount'] ) ? (int) $data['charged_amount'] : ( isset( $data['amount'] ) ? (int) $data['amount'] : 0 );
+
+		Kwugwo_Payment_Sync::note_once(
+			$order,
+			'double_' . $activity_uid,
+			sprintf(
+				/* translators: 1: amount, 2: Kwugwo activity id. */
+				__( 'Kwugwo: the customer paid for this order a second time (%1$s, payment attempt %2$s). Refund that extra payment from your Kwugwo dashboard.', 'kwugwo-for-woocommerce' ),
+				wp_strip_all_tags( wc_price( $amount / 100, array( 'currency' => $order->get_currency() ) ) ),
+				$activity_uid
+			)
+		);
 	}
 
 	/**
-	 * Send a status code + tiny JSON body and stop. Kwugwo treats any 2xx as
-	 * success; non-2xx (including our 500) triggers its retry schedule.
+	 * Send a status code with a short JSON body and stop.
 	 *
 	 * @param int    $code    HTTP status.
 	 * @param string $message Short reason.
 	 */
-	private function respond( $code, $message ) {
-		status_header( $code );
+	private static function respond( $code, $message ) {
 		wp_send_json( array( 'message' => $message ), $code );
-		// wp_send_json calls wp_die() internally; execution stops here.
 	}
 }

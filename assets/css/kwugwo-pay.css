@@ -1,19 +1,23 @@
-.kwugwo-checkout {
+.kwugwo-pay {
 	max-width: 520px;
 	margin: 1.5em 0;
 }
 
-.kwugwo-checkout__intro {
-	margin-bottom: 1em;
+.kwugwo-pay__status {
+	margin-top: 1em;
+	min-height: 1.5em;
 }
 
-#kwugwo-pay-button.kwugwo-busy {
+#kwugwo-pay-button:disabled {
 	opacity: 0.6;
 	cursor: progress;
 }
 
-.kwugwo-checkout__status {
-	margin-top: 1em;
-	min-height: 1.2em;
-	color: #555;
+.kwugwo-test-mode {
+	display: inline-block;
+	padding: 0.25em 0.75em;
+	border-radius: 3px;
+	background: #fff8e5;
+	color: #614200;
+	font-size: 0.9em;
 }

@@ -1,0 +1,86 @@
+.kwugwo-setup {
+	max-width: 900px;
+	margin: 1em 0 2em;
+}
+
+.kwugwo-mode {
+	padding: 10px 14px;
+	border-left: 4px solid #dba617;
+	background: #fcf9e8;
+	font-weight: 600;
+}
+
+.kwugwo-mode--live {
+	border-left-color: #00a32a;
+	background: #edfaef;
+}
+
+.kwugwo-setup__checklist {
+	padding: 4px 16px 8px;
+	border: 1px solid #c3c4c7;
+	background: #fff;
+}
+
+.kwugwo-setup__checklist ul {
+	margin: 0;
+}
+
+.kwugwo-setup__checklist li {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	margin: 8px 0;
+}
+
+.kwugwo-setup__checklist .is-done .dashicons {
+	color: #00a32a;
+}
+
+.kwugwo-setup__checklist .is-todo .dashicons {
+	color: #dba617;
+}
+
+.kwugwo-guide {
+	margin-top: 12px;
+	padding: 8px 16px;
+	border: 1px solid #c3c4c7;
+	background: #fff;
+}
+
+.kwugwo-guide summary {
+	cursor: pointer;
+	font-weight: 600;
+	padding: 4px 0;
+}
+
+.kwugwo-guide__steps > li {
+	margin-bottom: 1em;
+}
+
+.kwugwo-guide__steps ol {
+	list-style: lower-alpha;
+}
+
+.kwugwo-copy {
+	display: flex;
+	gap: 6px;
+	max-width: 600px;
+}
+
+.kwugwo-copy input {
+	flex: 1;
+}
+
+.kwugwo-test-result {
+	display: inline-block;
+	margin-left: 8px;
+	vertical-align: middle;
+}
+
+.kwugwo-test-result.is-success {
+	color: #007017;
+}
+
+.kwugwo-test-result.is-error {
+	color: #b32d2e;
+}

@@ -1,11 +1,10 @@
 <?php
 /**
- * Cart & Checkout Blocks integration for the Kwugwo gateway.
+ * Cart & Checkout blocks integration.
  *
- * Registers Kwugwo as a payment method in the block-based checkout. The
- * payment itself runs through the gateway's server-side process_payment(),
- * whose returned redirect the block checkout follows to the order-pay page
- * where the embedded overlay opens - same flow as the classic checkout.
+ * Payment runs through the gateway's process_payment(), which sends the
+ * customer to the order-pay page where the Kwugwo window opens, the same
+ * as with the classic checkout.
  *
  * @package Kwugwo\WooCommerce
  */
@@ -14,85 +13,67 @@ defined( 'ABSPATH' ) || exit;
 
 use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType;
 
+/**
+ * Blocks payment method type.
+ */
 final class Kwugwo_Blocks_Support extends AbstractPaymentMethodType {
 
 	/**
+	 * Payment method name.
+	 *
 	 * @var string
 	 */
 	protected $name = KWUGWO_WC_GATEWAY_ID;
 
 	/**
-	 * Load the gateway settings.
+	 * Nothing to load up front; settings are read from the gateway.
 	 */
-	public function initialize() {
-		$this->settings = get_option( 'woocommerce_' . KWUGWO_WC_GATEWAY_ID . '_settings', array() );
-	}
+	public function initialize() {}
 
 	/**
-	 * Whether the method should be available in the block checkout.
+	 * Whether the method is offered in the block checkout.
 	 *
 	 * @return bool
 	 */
 	public function is_active() {
-		$gateway = $this->get_gateway();
-		return $gateway ? $gateway->is_available() : false;
+		$gateway = kwugwo_wc_gateway();
+		return $gateway && $gateway->is_available();
 	}
 
 	/**
-	 * Register and return the script handle(s) for the block integration.
+	 * Script handles for the block checkout.
 	 *
 	 * @return string[]
 	 */
 	public function get_payment_method_script_handles() {
-		$handle = 'kwugwo-blocks';
-
 		wp_register_script(
-			$handle,
+			'kwugwo-blocks',
 			KWUGWO_WC_URL . 'assets/js/blocks.js',
-			array( 'wc-blocks-registry', 'wc-settings', 'wp-element', 'wp-html-entities', 'wp-i18n' ),
+			array( 'wc-blocks-registry', 'wc-settings', 'wp-element', 'wp-html-entities' ),
 			KWUGWO_WC_VERSION,
 			true
 		);
-
-		if ( function_exists( 'wp_set_script_translations' ) ) {
-			wp_set_script_translations( $handle, 'kwugwo-for-woocommerce' );
-		}
-
-		return array( $handle );
+		return array( 'kwugwo-blocks' );
 	}
 
 	/**
-	 * Data passed to the block integration (read client-side via getSetting).
+	 * Data available to blocks.js through getSetting( 'kwugwo_data' ).
 	 *
 	 * @return array
 	 */
 	public function get_payment_method_data() {
-		$gateway = $this->get_gateway();
+		$gateway = kwugwo_wc_gateway();
+		if ( ! $gateway ) {
+			return array();
+		}
 
 		return array(
-			'title'       => $gateway ? $gateway->get_option( 'title', __( 'Kwugwo', 'kwugwo-for-woocommerce' ) ) : __( 'Kwugwo', 'kwugwo-for-woocommerce' ),
-			'description' => $gateway ? $gateway->get_option( 'description', '' ) : '',
-			'icon'        => apply_filters( 'kwugwo_wc_icon', KWUGWO_WC_URL . 'assets/images/kwugwo-logo.jpg' ),
-			'supports'    => $this->get_supported_features(),
+			'title'        => $gateway->get_title(),
+			'description'  => $gateway->get_description(),
+			'icon'         => $gateway->icon,
+			'testMode'     => 'sandbox' === $gateway->get_mode(),
+			'testModeText' => __( 'Test mode: no real money will be taken.', 'kwugwo-for-woocommerce' ),
+			'supports'     => array_values( $gateway->supports ),
 		);
-	}
-
-	/**
-	 * @return string[]
-	 */
-	public function get_supported_features() {
-		$gateway = $this->get_gateway();
-		return $gateway ? array_values( $gateway->supports ) : array( 'products' );
-	}
-
-	/**
-	 * @return WC_Gateway_Kwugwo|null
-	 */
-	private function get_gateway() {
-		if ( ! function_exists( 'WC' ) || ! WC()->payment_gateways() ) {
-			return null;
-		}
-		$gateways = WC()->payment_gateways()->payment_gateways();
-		return isset( $gateways[ KWUGWO_WC_GATEWAY_ID ] ) ? $gateways[ KWUGWO_WC_GATEWAY_ID ] : null;
 	}
 }
