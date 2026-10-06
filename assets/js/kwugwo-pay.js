@@ -1,28 +1,21 @@
 /**
- * Kwugwo embedded checkout bootstrap for the WooCommerce order-pay page.
+ * Opens the Kwugwo checkout window on the WooCommerce order-pay page.
  *
- * Reads the per-order config localized as `KwugwoWC`, opens the hosted
- * checkout overlay against the ugwo created server-side, and reacts to the
- * result. The webhook is the source of truth for fulfilment; this script only
- * drives the customer experience.
+ * Config comes from `kwugwoPay` (see Kwugwo_Gateway::enqueue_checkout_assets).
+ * This only drives what the customer sees; the order is marked paid by the
+ * server after it confirms the payment with Kwugwo.
  */
 ( function () {
 	'use strict';
 
-	var cfg = window.KwugwoWC || {};
-	var i18n = cfg.i18n || {};
+	var config = window.kwugwoPay || {};
+	var i18n = config.i18n || {};
 
-	function ready( fn ) {
-		if ( document.readyState !== 'loading' ) {
-			fn();
-		} else {
-			document.addEventListener( 'DOMContentLoaded', fn );
-		}
-	}
-
-	ready( function () {
+	function start() {
 		var button = document.getElementById( 'kwugwo-pay-button' );
-		var statusEl = document.getElementById( 'kwugwo-checkout-status' );
+		var statusEl = document.getElementById( 'kwugwo-pay-status' );
+		var checkout;
+		var busy = false;
 
 		function setStatus( message ) {
 			if ( statusEl ) {
@@ -30,90 +23,62 @@
 			}
 		}
 
-		function setBusy( busy ) {
-			if ( ! button ) {
-				return;
+		function setBusy( value ) {
+			busy = value;
+			if ( button ) {
+				button.disabled = value;
 			}
-			button.disabled = !! busy;
-			button.classList.toggle( 'kwugwo-busy', !! busy );
 		}
 
-		if ( ! window.KwugwoCheckout || typeof window.KwugwoCheckout.init !== 'function' ) {
-			setStatus( i18n.error || 'Checkout failed to load.' );
+		if ( ! window.KwugwoCheckout || ! config.publicKey || ! config.ugwoUid ) {
+			setStatus( i18n.error );
 			return;
 		}
 
-		if ( ! cfg.publicKey || ! cfg.ugwoUid ) {
-			setStatus( i18n.error || 'Checkout is not configured.' );
-			return;
-		}
-
-		var checkout;
 		try {
 			checkout = window.KwugwoCheckout.init( {
-				publicKey: cfg.publicKey,
-				baseUrl: cfg.baseUrl || undefined
+				publicKey: config.publicKey,
+				baseUrl: config.baseUrl || undefined
 			} );
 		} catch ( e ) {
-			setStatus( i18n.error || 'Checkout failed to initialise.' );
-			if ( window.console ) {
-				console.error( '[Kwugwo]', e );
-			}
+			setStatus( i18n.error );
 			return;
 		}
 
-		var opening = false;
-
-		function openCheckout() {
-			if ( opening ) {
+		function open() {
+			if ( busy ) {
 				return;
 			}
-			opening = true;
 			setBusy( true );
-			setStatus( i18n.opening || 'Opening secure checkout…' );
+			setStatus( i18n.opening );
 
 			checkout
 				.open( {
-					ugwoUid: cfg.ugwoUid,
-					returnUrl: cfg.returnUrl || undefined,
+					ugwoUid: config.ugwoUid,
+					returnUrl: config.returnUrl,
 					onSuccess: function () {
-						// The SDK navigates to returnUrl after this resolves.
-						setStatus( i18n.success || 'Payment received! Redirecting…' );
-					},
-					onClose: function () {
-						setStatus( i18n.closed || 'Checkout closed. Click the button to try again.' );
-					},
-					onError: function ( err ) {
-						setStatus( i18n.error || 'Something went wrong with the payment. Please try again.' );
-						if ( window.console ) {
-							console.error( '[Kwugwo]', err && err.code, err && err.message );
-						}
+						setStatus( i18n.success );
 					}
 				} )
 				.then( function ( result ) {
-					opening = false;
-					setBusy( false );
 					if ( result && result.type === 'success' ) {
-						// Fallback redirect in case returnUrl was not provided.
-						if ( cfg.returnUrl ) {
-							window.location.href = cfg.returnUrl;
-						}
 						return;
 					}
-					// Closed or error — let the customer retry.
-					if ( button ) {
-						button.textContent = i18n.payAgain || 'Pay now';
-					}
+					setBusy( false );
+					setStatus( result && result.type === 'error' ? i18n.error : i18n.closed );
 				} );
 		}
 
 		if ( button ) {
-			button.addEventListener( 'click', openCheckout );
+			button.addEventListener( 'click', open );
 		}
 
-		// Open automatically when the customer lands on the order-pay page.
-		if ( cfg.autoOpen ) {
-			openCheckout();
-		}
-	} );
-} )();
+		open();
+	}
+
+	if ( document.readyState === 'loading' ) {
+		document.addEventListener( 'DOMContentLoaded', start );
+	} else {
+		start();
+	}
+}() );

@@ -1,0 +1,942 @@
+# Copyright (C) 2026 Kwugwo
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Kwugwo for WooCommerce 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/kwugwo-for-woocommerce\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-10-06T15:11:38+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: kwugwo-for-woocommerce\n"
+
+#. Plugin Name of the plugin
+#: kwugwo-for-woocommerce.php
+#: includes/class-kwugwo-admin.php:552
+msgid "Kwugwo for WooCommerce"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: kwugwo-for-woocommerce.php
+msgid "https://kwugwo.africa"
+msgstr ""
+
+#. Description of the plugin
+#: kwugwo-for-woocommerce.php
+msgid "Accept bank transfer, USSD and pay-with-bank payments in Nigeria through the Kwugwo checkout, routed to the payment providers you already use."
+msgstr ""
+
+#. Author of the plugin
+#: kwugwo-for-woocommerce.php
+#: includes/class-kwugwo-gateway.php:50
+msgid "Kwugwo"
+msgstr ""
+
+#. Author URI of the plugin
+#: kwugwo-for-woocommerce.php
+msgid "https://github.com/Kwugwo/kwugwo-for-woocommerce"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:66
+msgid "Checking with Kwugwo…"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:67
+msgid "Could not check the keys. Please try again."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:68
+msgid "Copied"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:69
+#: includes/class-kwugwo-gateway.php:219
+msgid "Copy"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:70
+#: includes/class-kwugwo-gateway.php:274
+msgid "Automatic (use my routing rules)"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:97
+msgid "Live mode: customers pay with real money."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:99
+msgid "Sandbox mode: payments are tests and no real money moves. Switch to Live under \"Test or live payments\" when you are ready."
+msgstr ""
+
+#. translators: %s: environment name (Sandbox or Live).
+#: includes/class-kwugwo-admin.php:108
+#, php-format
+msgid "Setup checklist (%s)"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:115
+msgid "Done:"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:115
+msgid "To do:"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:121
+msgid "All set. Kwugwo is ready to take payments."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:126
+msgid "How to set up Kwugwo, step by step"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:129
+msgid "Get your Kwugwo account ready"
+msgstr ""
+
+#. translators: %s: link to the Kwugwo dashboard.
+#: includes/class-kwugwo-admin.php:134
+#, php-format
+msgid "Sign in to your %s. Connect the payment provider that already collects money for you, then create a checkout for NGN and choose the payment methods to offer (bank transfer, USSD, pay with bank). Money goes straight into your own provider account; Kwugwo never holds it."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:135
+msgid "Kwugwo dashboard"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:139
+msgid "Kwugwo has a Sandbox side for testing and a Live side for real payments. Each has its own keys, checkouts and webhooks, so you will do steps 2 and 3 once for each."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:142
+msgid "Copy your API keys"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:143
+msgid "On the API Keys page of your dashboard, copy the public key (starts with \"pk.\") and the secret key (starts with \"sk.\") into the matching boxes below, then click \"Test connection\". Never share the secret key with anyone; anyone who has it can manage payments on your account."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:146
+msgid "Connect webhooks so orders update by themselves"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:147
+msgid "A webhook is how Kwugwo tells your store that a customer has paid, even if they close their browser before coming back. Without it, some orders may stay \"Pending payment\"."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:149
+msgid "Copy the Webhook URL below."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:150
+msgid "On the Webhooks page of your dashboard, add a new endpoint and paste the URL. Set a signing secret when asked."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:152
+msgid "Choose the events to send. Tick these:"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:159
+msgid "Copy the signing secret (starts with \"wsk.\") into \"Webhook signing secret\" below, then save."
+msgstr ""
+
+#. translators: %s: IP address.
+#: includes/class-kwugwo-admin.php:165
+#, php-format
+msgid "If your hosting has a firewall, allow requests from Kwugwo's address %s."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:172
+msgid "Try a test payment, then go live"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:173
+msgid "In Sandbox mode, place an order on your store and pay in the Kwugwo window. Depending on your payment provider, sandbox payments either complete by themselves or need you to approve them with the provider's test tools. The order should move to \"Processing\" on its own."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:174
+msgid "When that works, set Mode to Live, add your Live keys and Live webhook signing secret, and save. Your customers can now pay you for real."
+msgstr ""
+
+#. translators: %s: link to the Kwugwo documentation.
+#: includes/class-kwugwo-admin.php:181
+#, php-format
+msgid "Need more detail? Read the %s."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:182
+msgid "Kwugwo documentation"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:198
+msgid "required; marks the order paid"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:199
+msgid "updates the order when a payment is cancelled or refunded"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:200
+msgid "puts the order on hold if the payment provider reverses a payment"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:201
+msgid "warns you when a customer pays twice"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:202
+msgid "notes on the order when a refund completes"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:203
+msgid "warns you on the order when a refund fails"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:222
+msgid "Your store currency is Nigerian Naira (NGN)."
+msgstr ""
+
+#. translators: 1: store currency code, 2: link to general settings.
+#: includes/class-kwugwo-admin.php:227
+#, php-format
+msgid "Your store currency is %1$s, but Kwugwo only accepts Nigerian Naira (NGN). Change it in %2$s."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:229
+msgid "general settings"
+msgstr ""
+
+#. translators: %s: environment name.
+#: includes/class-kwugwo-admin.php:235
+#, php-format
+msgid "Add your %s public and secret keys (step 2)."
+msgstr ""
+
+#. translators: %s: environment name.
+#: includes/class-kwugwo-admin.php:238
+#, php-format
+msgid "Your %s keys are saved but have not been confirmed. Click \"Test connection\"."
+msgstr ""
+
+#. translators: %s: environment name.
+#: includes/class-kwugwo-admin.php:241
+#, php-format
+msgid "Your %s keys work."
+msgstr ""
+
+#. translators: %s: environment name.
+#: includes/class-kwugwo-admin.php:246
+#, php-format
+msgid "Add the %s webhook and its signing secret (step 3)."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:248
+msgid "Webhook signing secret saved. Kwugwo has not sent an update yet; the first one arrives with your first payment."
+msgstr ""
+
+#. translators: %s: time since, e.g. "5 mins".
+#: includes/class-kwugwo-admin.php:255
+#, php-format
+msgid "Webhook connected. Kwugwo last sent an update %s ago."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:263
+msgid "Kwugwo is turned on at checkout."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:264
+msgid "Tick \"Turn on Kwugwo\" below and save to show it at checkout."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:290
+msgid "You are not allowed to change payment settings."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:299
+msgid "The Kwugwo payment method is not loaded."
+msgstr ""
+
+#. translators: 1: environment name, 2: number of checkouts.
+#: includes/class-kwugwo-admin.php:316
+#, php-format
+msgid "Connected to Kwugwo %1$s. You have %2$d active checkout. Save your changes to keep these keys."
+msgid_plural "Connected to Kwugwo %1$s. You have %2$d active checkouts. Save your changes to keep these keys."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: environment name.
+#: includes/class-kwugwo-admin.php:323
+#, php-format
+msgid "Connected to Kwugwo %s, but there are no active checkouts yet. Create one in your Kwugwo dashboard before taking payments, then save your changes here."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:358
+msgid "Kwugwo payment"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:378
+#: includes/class-kwugwo-gateway.php:104
+msgid "Mode"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:379
+msgid "Status"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:380
+msgid "Payment ID"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:381
+msgid "Reference"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:382
+msgid "Provider reference"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:392
+msgid "Check payment status now"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:397
+msgid "Refund account (only if asked)"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:398
+msgid "Some payment providers cannot send money back to a bank transfer or USSD payer on their own. If a refund asks for the customer's account, enter it here, click Update, then refund again."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:400
+msgid "Bank"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:402
+msgid "Choose a bank"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:409
+msgid "Account number (10 digits)"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:424
+msgid "Waiting for payment"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:425
+msgid "Customer is paying"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:426
+msgid "Paid"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:427
+msgid "Partly refunded"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:428
+msgid "Refunded"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:429
+msgid "Cancelled"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:455
+msgid "Kwugwo refund account not saved: choose a bank and enter a 10-digit account number."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:479
+msgid "You are not allowed to edit this order."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:502
+msgid "Kwugwo payment status checked. Any change is in the order notes."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:504
+msgid "Could not reach Kwugwo to check this payment. Check your keys in the Kwugwo settings, or try again in a moment."
+msgstr ""
+
+#. translators: %s: environment name.
+#: includes/class-kwugwo-admin.php:525
+#, php-format
+msgid "Kwugwo is turned on but its %s keys are missing, so customers cannot see it at checkout."
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:530
+msgid "Finish setting up Kwugwo"
+msgstr ""
+
+#: includes/class-kwugwo-admin.php:542
+msgid "We use Kwugwo (kwugwo.africa) to process payments. When you choose to pay with Kwugwo, we send Kwugwo your email address, your name, the order amount and currency, and the order number, so it can create the payment and show you the payment options. You then enter your payment details in a secure window hosted by Kwugwo; we never see your bank details."
+msgstr ""
+
+#. translators: 1: Kwugwo privacy policy URL, 2: Kwugwo terms URL.
+#: includes/class-kwugwo-admin.php:546
+#, php-format
+msgid "See the <a href=\"%1$s\">Kwugwo privacy policy</a> and <a href=\"%2$s\">terms of service</a>."
+msgstr ""
+
+#: includes/class-kwugwo-api.php:117
+msgid "No Kwugwo secret key is set for this environment."
+msgstr ""
+
+#: includes/class-kwugwo-api.php:162
+msgid "Kwugwo sent a response we could not read."
+msgstr ""
+
+#. translators: %d: HTTP status code.
+#: includes/class-kwugwo-api.php:195
+#, php-format
+msgid "Kwugwo returned HTTP %d."
+msgstr ""
+
+#: includes/class-kwugwo-blocks-support.php:75
+#: includes/class-kwugwo-gateway.php:652
+#: includes/class-kwugwo-gateway.php:922
+msgid "Test mode: no real money will be taken."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:51
+msgid "Let customers pay by bank transfer, USSD or pay with bank in a secure Kwugwo window, routed to the payment providers you have connected on Kwugwo."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:79
+msgid "Turn on Kwugwo"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:81
+msgid "Show Kwugwo as a payment option at checkout"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:85
+msgid "Name at checkout"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:87
+msgid "What customers see as the payment option name."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:88
+msgid "Bank transfer, USSD and more (Kwugwo)"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:92
+msgid "Message at checkout"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:94
+msgid "Shown under the payment option name."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:95
+msgid "Pay securely by bank transfer, USSD or with your bank app. A secure Kwugwo window will open to complete your payment."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:99
+msgid "Test or live payments"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:101
+msgid "Kwugwo has two separate environments, each with its own keys. Use Sandbox to try things out without real money, then switch to Live when you are ready to sell."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:108
+msgid "Sandbox (test payments, no real money)"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:109
+msgid "Live (real payments)"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:113
+msgid "Webhook URL"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:115
+msgid "Kwugwo uses this address to tell your store when a customer has paid. Add it in your Kwugwo dashboard under Webhooks, once in Sandbox and once in Live."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:124
+msgid "Troubleshooting"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:128
+msgid "Debug log"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:130
+msgid "Record Kwugwo requests and webhooks in the WooCommerce log"
+msgstr ""
+
+#. translators: %s: log source name.
+#: includes/class-kwugwo-gateway.php:134
+#, php-format
+msgid "Find the log under WooCommerce → Status → Logs (source: %s). Logs include customer emails and order amounts, so only turn this on while fixing a problem."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:154
+msgid "Sandbox keys"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:154
+msgid "Live keys"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:158
+msgid "In your Kwugwo dashboard, switch to Sandbox, open the API Keys page, then copy both keys here."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:159
+msgid "In your Kwugwo dashboard, switch to Live, open the API Keys page, then copy both keys here."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:162
+msgid "Public key"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:166
+msgid "Starts with \"pk.\". Safe to show in the browser; it opens the payment window."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:170
+msgid "Secret key"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:174
+msgid "Starts with \"sk.\". Keep it private: it is only used by your store's server and never shown to customers."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:184
+msgid "Webhook signing secret"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:188
+msgid "Shown in your Kwugwo dashboard after you add the webhook URL above. It lets your store confirm that payment updates really come from Kwugwo."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:192
+msgid "Checkout (optional)"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:196
+msgid "Leave on \"Automatic\" to let your Kwugwo routing rules choose. Pick a checkout to make every payment from this store use its payment methods and providers, for example to keep this store's money separate."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:241
+msgid "Test connection"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:271
+msgid "Save working keys to choose from your checkouts, or paste a checkout ID from your Kwugwo dashboard."
+msgstr ""
+
+#. translators: %s: checkout id.
+#: includes/class-kwugwo-gateway.php:282
+#, php-format
+msgid "%s (not found or inactive)"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:322
+msgid "Kwugwo: the checkout ID should look like \"chk.XXXX.…\". It was not saved."
+msgstr ""
+
+#. translators: 1: environment name (Sandbox or Live), 2: problem description.
+#: includes/class-kwugwo-gateway.php:373
+#: includes/class-kwugwo-gateway.php:384
+#, php-format
+msgid "Kwugwo %1$s keys: %2$s"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:397
+msgid "add both the public key and the secret key."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:400
+msgid "the public key should start with \"pk.\". Check that you did not swap the two keys."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:403
+msgid "the secret key should start with \"sk.\". Check that you did not swap the two keys."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:410
+msgid "the public key and the secret key come from different Kwugwo workspaces. Copy both from the same workspace."
+msgstr ""
+
+#. translators: 1: environment name, 2: the other environment name.
+#: includes/class-kwugwo-gateway.php:433
+#, php-format
+msgid "Kwugwo did not accept this secret key for %1$s. Make sure you copied the whole key from the %1$s side of your dashboard, not %2$s, and that it has not been regenerated since."
+msgstr ""
+
+#. translators: %s: error message.
+#: includes/class-kwugwo-gateway.php:443
+#, php-format
+msgid "could not reach Kwugwo to check the key (%s). Try again in a moment."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:501
+msgid "Bank transfer"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:502
+msgid "USSD"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:503
+msgid "Pay with bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:504
+msgid "Mobile money"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:521
+msgid "no payment methods"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:603
+msgid "Live"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:603
+msgid "Sandbox"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:665
+msgid "We could not find your order. Please try again."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:698
+msgid "This payment option only accepts Nigerian Naira (NGN)."
+msgstr ""
+
+#. translators: 1: minimum amount, 2: maximum amount.
+#: includes/class-kwugwo-gateway.php:705
+#, php-format
+msgid "This payment option accepts orders from %1$s to %2$s."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:742
+msgid "We could not start your payment. Please try again, or choose another payment option."
+msgstr ""
+
+#. translators: 1: environment name, 2: Kwugwo payment id.
+#: includes/class-kwugwo-gateway.php:752
+#, php-format
+msgid "Kwugwo (%1$s): payment request %2$s created. Waiting for the customer to pay."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:802
+msgid "Kwugwo did not return a payment id."
+msgstr ""
+
+#. translators: 1: order number, 2: store name.
+#: includes/class-kwugwo-gateway.php:844
+#, php-format
+msgid "Order %1$s at %2$s"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:863
+msgid "Kwugwo rejected the secret key. Open the Kwugwo settings and use \"Test connection\"."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:866
+msgid "Your Kwugwo subscription balance cannot cover this payment. Top up in your Kwugwo dashboard."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:869
+msgid "None of the payment providers connected on Kwugwo accept this currency. Connect a provider in your Kwugwo dashboard."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:872
+msgid "Kwugwo did not accept the payment details. If you picked a checkout in the Kwugwo settings, make sure it is still active."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:875
+msgid "Your store could not reach Kwugwo. This is usually temporary."
+msgstr ""
+
+#. translators: 1: error message from Kwugwo, 2: what to do about it.
+#: includes/class-kwugwo-gateway.php:884
+#, php-format
+msgid "Kwugwo could not create the payment request: %1$s %2$s"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:903
+msgid "This order has already been paid. Thank you!"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:914
+msgid "We could not start your payment. Please refresh this page to try again, or contact the store."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:924
+msgid "A secure Kwugwo window will open so you can pay by bank transfer, USSD or with your bank app. If it does not open, use the button below."
+msgstr ""
+
+#. translators: %s: order total.
+#: includes/class-kwugwo-gateway.php:929
+#, php-format
+msgid "Pay %s"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:959
+msgid "Opening the secure payment window…"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:960
+msgid "Payment received. Taking you to your order…"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:961
+msgid "The payment window was closed. Click the button when you are ready to pay."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:962
+msgid "Something went wrong with the payment window. Please refresh the page and try again."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:996
+msgid "This order was not paid through Kwugwo, so it cannot be refunded here."
+msgstr ""
+
+#. translators: %s: minimum refund amount.
+#: includes/class-kwugwo-gateway.php:1005
+#, php-format
+msgid "Kwugwo refunds must be at least %s."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1020
+msgid "Could not find the successful Kwugwo payment for this order. Refund it from your Kwugwo dashboard instead."
+msgstr ""
+
+#. translators: 1: refund amount, 2: Kwugwo refund id.
+#: includes/class-kwugwo-gateway.php:1056
+#, php-format
+msgid "Kwugwo refund of %1$s requested (%2$s). The payment provider is processing it; you will see another note when it completes."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1074
+msgid "The payment provider needs the customer's bank account to send this refund. Enter it in the \"Kwugwo payment\" box on this order, click Update, then try the refund again."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1077
+msgid "This refund is more than what is left to refund on the Kwugwo payment."
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1080
+msgid "This refund is below the smallest amount Kwugwo can refund."
+msgstr ""
+
+#. translators: %s: error message.
+#: includes/class-kwugwo-gateway.php:1085
+#, php-format
+msgid "Kwugwo could not refund this payment: %s"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1098
+msgid "Access Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1099
+msgid "Access (Diamond)"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1100
+msgid "Ecobank Nigeria"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1101
+msgid "First Bank of Nigeria"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1102
+msgid "FCMB"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1103
+msgid "Fidelity Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1104
+msgid "78 Finance Company"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1105
+msgid "Globus Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1106
+msgid "Guaranty Trust Bank (GTBank)"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1107
+msgid "Heritage Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1108
+msgid "Jaiz Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1109
+msgid "Keystone Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1110
+msgid "Kuda Microfinance Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1111
+msgid "Lotus Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1112
+msgid "OPay"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1113
+msgid "Optimum Trust Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1114
+msgid "PalmPay"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1115
+msgid "Polaris Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1116
+msgid "PremiumTrust Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1117
+msgid "Providus Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1118
+msgid "Rubies (Highstreet) MFB"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1119
+msgid "Standard Chartered Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1120
+msgid "Stanbic IBTC Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1121
+msgid "Sterling Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1122
+msgid "United Bank for Africa (UBA)"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1123
+msgid "Union Bank of Nigeria"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1124
+msgid "Unity Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1125
+msgid "VFD Microfinance Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1126
+msgid "Wema Bank"
+msgstr ""
+
+#: includes/class-kwugwo-gateway.php:1127
+msgid "Zenith Bank"
+msgstr ""
+
+#: includes/class-kwugwo-payment-sync.php:47
+msgid "This order has no Kwugwo payment."
+msgstr ""
+
+#: includes/class-kwugwo-payment-sync.php:92
+msgid "Kwugwo: this payment was refunded before the order was marked paid. Check the payment in your Kwugwo dashboard before sending anything."
+msgstr ""
+
+#. translators: %s: list of problems.
+#: includes/class-kwugwo-payment-sync.php:120
+#, php-format
+msgid "Kwugwo says this payment succeeded, but it does not match the order: %s Check it in your Kwugwo dashboard before sending anything."
+msgstr ""
+
+#. translators: 1: Kwugwo payment id, 2: payment provider reference.
+#: includes/class-kwugwo-payment-sync.php:130
+#, php-format
+msgid "Kwugwo payment confirmed (%1$s). Payment provider reference: %2$s."
+msgstr ""
+
+#: includes/class-kwugwo-payment-sync.php:151
+msgid "less than the full amount was received."
+msgstr ""
+
+#: includes/class-kwugwo-payment-sync.php:154
+msgid "the amount is different from the order total."
+msgstr ""
+
+#: includes/class-kwugwo-payment-sync.php:157
+msgid "the currency is different."
+msgstr ""
+
+#: includes/class-kwugwo-payment-sync.php:160
+msgid "the payment reference is different."
+msgstr ""
+
+#: includes/class-kwugwo-payment-sync.php:177
+msgid "Kwugwo reports this payment is no longer successful; the payment provider may have reversed it. Check your Kwugwo dashboard before sending anything."
+msgstr ""
+
+#. translators: 1: amount received, 2: amount due.
+#: includes/class-kwugwo-payment-sync.php:195
+#, php-format
+msgid "Kwugwo: the customer paid %1$s of %2$s. The order stays unpaid. Refund the part payment from your Kwugwo dashboard, or settle the difference with the customer."
+msgstr ""
+
+#: includes/class-kwugwo-payment-sync.php:201
+msgid "Kwugwo: the payment request was cancelled. If the customer tries to pay again, a new request is created automatically."
+msgstr ""
+
+#: includes/class-kwugwo-payment-sync.php:322
+msgid "We are waiting for your bank to confirm your payment. This usually takes a minute or two. You will get an email as soon as it is confirmed, so there is no need to pay again."
+msgstr ""
+
+#: includes/class-kwugwo-payment-sync.php:348
+msgid "Kwugwo: the payment request was cancelled along with the order."
+msgstr ""
+
+#. translators: 1: amount, 2: Kwugwo refund id.
+#: includes/class-kwugwo-webhook.php:151
+#, php-format
+msgid "Kwugwo refund of %1$s completed (%2$s). The money is on its way back to the customer."
+msgstr ""
+
+#. translators: 1: amount, 2: Kwugwo refund id, 3: reason.
+#: includes/class-kwugwo-webhook.php:159
+#, php-format
+msgid "Kwugwo refund of %1$s FAILED (%2$s): %3$s The customer has not been paid back, although WooCommerce lists the refund. Fix the cause and refund again, or pay the customer directly."
+msgstr ""
+
+#. translators: 1: amount, 2: Kwugwo activity id.
+#: includes/class-kwugwo-webhook.php:179
+#, php-format
+msgid "Kwugwo: the customer paid for this order a second time (%1$s, payment attempt %2$s). Refund that extra payment from your Kwugwo dashboard."
+msgstr ""
+
+#: kwugwo-for-woocommerce.php:152
+msgid "Set up"
+msgstr ""

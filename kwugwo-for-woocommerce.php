@@ -1,17 +1,20 @@
 <?php
 /**
- * Plugin Name: Kwugwo for WooCommerce
- * Plugin URI:  https://kwugwo.africa
- * Description: Accept payments across Africa's PSPs with Kwugwo. Uses the Kwugwo embedded checkout overlay; supports sandbox and live keys with a one-click environment toggle.
- * Version:     1.0.0
- * Author:      Kwugwo
- * Author URI:  https://github.com/Kwugwo/kwugwo-for-woocommerce
- * License:     GPL-2.0-or-later
- * Text Domain: kwugwo-for-woocommerce
- * Requires PHP: 7.4
- * Requires at least: 6.0
- * WC requires at least: 7.0
- * WC tested up to: 9.4
+ * Plugin Name:          Kwugwo for WooCommerce
+ * Plugin URI:           https://kwugwo.africa
+ * Description:          Accept bank transfer, USSD and pay-with-bank payments in Nigeria through the Kwugwo checkout, routed to the payment providers you already use.
+ * Version:              1.0.0
+ * Author:               Kwugwo
+ * Author URI:           https://github.com/Kwugwo/kwugwo-for-woocommerce
+ * License:              GPL-2.0-or-later
+ * License URI:          https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:          kwugwo-for-woocommerce
+ * Domain Path:          /languages
+ * Requires at least:    6.5
+ * Requires PHP:         7.4
+ * Requires Plugins:     woocommerce
+ * WC requires at least: 8.2
+ * WC tested up to:      11.1
  *
  * @package Kwugwo\WooCommerce
  */
@@ -22,58 +25,49 @@ define( 'KWUGWO_WC_VERSION', '1.0.0' );
 define( 'KWUGWO_WC_FILE', __FILE__ );
 define( 'KWUGWO_WC_PATH', plugin_dir_path( __FILE__ ) );
 define( 'KWUGWO_WC_URL', plugin_dir_url( __FILE__ ) );
-define( 'KWUGWO_WC_INSTANCE_ID_KEY', '_kwugwo_instance_id');
-
-/**
- * The gateway id used everywhere (settings key, order meta prefix, REST slug).
- */
 define( 'KWUGWO_WC_GATEWAY_ID', 'kwugwo' );
 
 /**
- * Default origin of the Kwugwo hosted checkout used by the embed SDK.
- * Override per-store from the gateway settings if you run against staging.
+ * Load the plugin once WooCommerce is available.
  */
-define( 'KWUGWO_WC_CHECKOUT_BASE_URL', 'https://checkout.kwugwo.africa' );
-
-/**
- * Boot the plugin once all plugins are loaded so we can be sure WooCommerce
- * is available before we extend it.
- */
-add_action( 'plugins_loaded', 'kwugwo_wc_init', 11 );
-
 function kwugwo_wc_init() {
 	if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
-		add_action( 'admin_notices', 'kwugwo_wc_missing_wc_notice' );
 		return;
 	}
 
 	require_once KWUGWO_WC_PATH . 'includes/class-kwugwo-logger.php';
 	require_once KWUGWO_WC_PATH . 'includes/class-kwugwo-api.php';
-	require_once KWUGWO_WC_PATH . 'includes/class-wc-gateway-kwugwo.php';
+	require_once KWUGWO_WC_PATH . 'includes/class-kwugwo-payment-sync.php';
+	require_once KWUGWO_WC_PATH . 'includes/class-kwugwo-gateway.php';
 	require_once KWUGWO_WC_PATH . 'includes/class-kwugwo-webhook.php';
 
-	// Register the gateway with WooCommerce.
 	add_filter( 'woocommerce_payment_gateways', 'kwugwo_wc_add_gateway' );
 
-	// Boot the webhook listener (registers the wc-api endpoint).
-	Kwugwo_Webhook::instance();
+	Kwugwo_Webhook::init();
+	Kwugwo_Payment_Sync::init();
+
+	if ( is_admin() ) {
+		require_once KWUGWO_WC_PATH . 'includes/class-kwugwo-admin.php';
+		Kwugwo_Admin::init();
+	}
 }
+add_action( 'plugins_loaded', 'kwugwo_wc_init', 11 );
 
 /**
- * Register the Kwugwo gateway class with WooCommerce.
+ * Register the gateway with WooCommerce.
  *
- * @param string[] $gateways Registered gateway class names.
+ * @param string[] $gateways Gateway class names.
  * @return string[]
  */
 function kwugwo_wc_add_gateway( $gateways ) {
-	$gateways[] = 'WC_Gateway_Kwugwo';
+	$gateways[] = 'Kwugwo_Gateway';
 	return $gateways;
 }
 
 /**
- * Convenience accessor for the configured gateway instance.
+ * The loaded Kwugwo gateway instance.
  *
- * @return WC_Gateway_Kwugwo|null
+ * @return Kwugwo_Gateway|null
  */
 function kwugwo_wc_gateway() {
 	if ( ! function_exists( 'WC' ) || ! WC()->payment_gateways() ) {
@@ -84,67 +78,78 @@ function kwugwo_wc_gateway() {
 }
 
 /**
- * Admin notice when WooCommerce is not active.
+ * A short random id for this store, used to prefix payment references so
+ * several stores can share one Kwugwo workspace without clashing.
+ *
+ * @return string
  */
-function kwugwo_wc_missing_wc_notice() {
-	echo '<div class="notice notice-error"><p>';
-	echo esc_html__( 'Kwugwo for WooCommerce requires WooCommerce to be installed and active.', 'kwugwo-for-woocommerce' );
-	echo '</p></div>';
+function kwugwo_wc_site_id() {
+	$site_id = get_option( 'kwugwo_wc_site_id' );
+	if ( ! $site_id ) {
+		$site_id = strtolower( wp_generate_password( 6, false ) );
+		update_option( 'kwugwo_wc_site_id', $site_id, false );
+	}
+	return $site_id;
 }
 
 /**
- * Declare compatibility with High-Performance Order Storage (HPOS) and the
+ * Activation: make sure the store id exists.
+ */
+function kwugwo_wc_activate() {
+	kwugwo_wc_site_id();
+}
+register_activation_hook( __FILE__, 'kwugwo_wc_activate' );
+
+/**
+ * Deactivation: stop the background payment check.
+ */
+function kwugwo_wc_deactivate() {
+	if ( function_exists( 'as_unschedule_all_actions' ) ) {
+		as_unschedule_all_actions( 'kwugwo_wc_reconcile' );
+	}
+}
+register_deactivation_hook( __FILE__, 'kwugwo_wc_deactivate' );
+
+/**
+ * Declare compatibility with High-Performance Order Storage and the
  * Cart & Checkout blocks.
  */
-add_action(
-	'before_woocommerce_init',
-	function () {
-		if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
-			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
-			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', __FILE__, true );
-		}
-	}
-);
-
-/**
- * Register the Cart & Checkout block integration.
- */
-add_action(
-	'woocommerce_blocks_loaded',
-	function () {
-		if ( ! class_exists( \Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType::class ) ) {
-			return;
-		}
-
-		require_once KWUGWO_WC_PATH . 'includes/class-kwugwo-blocks-support.php';
-
-		add_action(
-			'woocommerce_blocks_payment_method_type_registration',
-			function ( \Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $registry ) {
-				$registry->register( new Kwugwo_Blocks_Support() );
-			}
-		);
-	}
-);
-
-/**
- * Add a settings shortcut to the plugins list.
- */
-add_filter(
-	'plugin_action_links_' . plugin_basename( __FILE__ ),
-	function ( $links ) {
-		$url   = admin_url( 'admin.php?page=wc-settings&tab=checkout&section=' . KWUGWO_WC_GATEWAY_ID );
-		$links = array_merge(
-			array( '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'kwugwo-for-woocommerce' ) . '</a>' ),
-			$links
-		);
-		return $links;
-	}
-);
-
-function kwugwo_activate() {
-	if (!get_option(KWUGWO_WC_INSTANCE_ID_KEY, null)) {
-		update_option(KWUGWO_WC_INSTANCE_ID_KEY, uniqid());
+function kwugwo_wc_declare_compatibility() {
+	if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', __FILE__, true );
 	}
 }
-register_activation_hook( __FILE__, 'kwugwo_activate' );
+add_action( 'before_woocommerce_init', 'kwugwo_wc_declare_compatibility' );
+
+/**
+ * Register the Cart & Checkout blocks integration.
+ */
+function kwugwo_wc_register_blocks_support() {
+	if ( ! class_exists( \Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType::class ) ) {
+		return;
+	}
+
+	require_once KWUGWO_WC_PATH . 'includes/class-kwugwo-blocks-support.php';
+
+	add_action(
+		'woocommerce_blocks_payment_method_type_registration',
+		static function ( $registry ) {
+			$registry->register( new Kwugwo_Blocks_Support() );
+		}
+	);
+}
+add_action( 'woocommerce_blocks_loaded', 'kwugwo_wc_register_blocks_support' );
+
+/**
+ * Add a "Settings" link on the Plugins screen.
+ *
+ * @param string[] $links Action links.
+ * @return string[]
+ */
+function kwugwo_wc_action_links( $links ) {
+	$url = admin_url( 'admin.php?page=wc-settings&tab=checkout&section=' . KWUGWO_WC_GATEWAY_ID );
+	array_unshift( $links, '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Set up', 'kwugwo-for-woocommerce' ) . '</a>' );
+	return $links;
+}
+add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'kwugwo_wc_action_links' );
